@@ -33,8 +33,8 @@ import (
 // updateCmd represents the update command
 var updateCmd = &cobra.Command{
 	Use:   "update",
-	Short: "Command update is used to update the path of a module referred by the name",
-	Long:  `Command update is used to update the path of a module referred by the name.`,
+	Short: "Update the info of a module in the local collection.",
+	Long:  `Update the info of a module in the local collection.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		updateModule()
 	},

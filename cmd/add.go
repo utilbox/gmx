@@ -39,8 +39,8 @@ var (
 // addCmd represents the add command
 var addCmd = &cobra.Command{
 	Use:   "add",
-	Short: "add the info of a module to library",
-	Long:  `add the info of a go module to the library.`,
+	Short: "Add a module or a version to local collection.",
+	Long:  `Add a module or a version to local collection.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		add()
 	},
