@@ -23,16 +23,13 @@ package cmd
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
-	"github.com/utilbox/gmx/config"
 )
 
-// rmCmd represents the rm command
-var rmCmd = &cobra.Command{
-	Use:   "rm",
+// searchCmd represents the search command
+var searchCmd = &cobra.Command{
+	Use:   "search",
 	Short: "A brief description of your command",
 	Long: `A longer description that spans multiple lines and likely contains examples
 and usage of using your command. For example:
@@ -41,55 +38,43 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		rmModule()
+		searchModule()
 	},
 }
 
 func init() {
-	rootCmd.AddCommand(rmCmd)
+	rootCmd.AddCommand(searchCmd)
 }
 
-func rmModule() {
-	selected := selectModule("name of module to remove", "module name cannot be empty")
-	opts := []string{"remove the module", "remove a version"}
+func searchModule() {
+	selected := selectModule("name of moudle to search", "module name cannot be empty")
+	opts := []string{"add new version(s)",
+		"use it in current project",
+		"fix the module path",
+		"fix a paticular version",
+		"remove the module",
+		"remove a paticular version",
+		"exit",
+	}
+
 	idx, _ := chooseFrom("What to do?", opts)
 	switch idx {
 	case 0:
-		removeModule(selected)
+		addVersion(selected)
 	case 1:
+		useModule(selected)
+	case 2:
+		fixPath(selected)
+	case 3:
+		fixVersion(selected)
+	case 4:
+		removeModule(selected)
+	case 5:
 		removeVersion(selected)
+	case 6:
+
 	default:
-		fmt.Print("Error: invalid operation")
+		fmt.Println("Error: invalid operation")
 	}
 
-}
-
-func removeVersion(name string) {
-	m, ok := config.Modules[name]
-	if !ok {
-		fmt.Printf("Error: module %s doesn't exist\n", name)
-		os.Exit(1)
-	}
-	vs := m.Versions
-	if vs == nil || len(vs) == 0 {
-		fmt.Printf("Error: no valid version in the info of module %s\n", name)
-		os.Exit(1)
-	}
-
-	i, v := chooseFrom("choose a version to remove", vs)
-
-	if i == 0 {
-		vs = vs[1:]
-	} else if i == len(vs)-1 {
-		vs = vs[:i]
-	} else {
-		head := vs[:i]
-		tail := vs[i+1:]
-		vs = append(head, tail...)
-	}
-
-	m.Versions = vs
-	viper.Set(name, m)
-	viper.WriteConfig()
-	fmt.Printf("Version %s of Module %s has been successfully removed.\n", v, name)
 }

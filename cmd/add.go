@@ -40,75 +40,94 @@ var (
 var addCmd = &cobra.Command{
 	Use:   "add",
 	Short: "add the info of a module to library",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Long:  `add the info of a go module to the library.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		addModule()
+		add()
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(addCmd)
-
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// addCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// addCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
-	addCmd.Flags().StringVarP(&name, "name", "n", "", "the name of the module")
-	addCmd.MarkFlagRequired("name")
-	addCmd.Flags().StringVarP(&path, "path", "p", "", "the full path of the module")
-	addCmd.Flags().StringVarP(&version, "version", "v", "", "the version of the module")
-
 }
 
-func addModule() {
-	if name == "" {
-		fmt.Println("Error: name for the module is required")
-		return
-	}
-
-	name = strings.ToLower(name)
+func add() {
+	name := getInput("name of the module to add", "module name cannot be empty", true)
 	m, ok := config.Modules[name]
 	if ok {
-		if version == "" {
-			fmt.Printf("Error: module %s (%s) exists, flag \"version\" is required\n", name, m.Path)
-			return
+		fmt.Printf(`Module %s already existes:
+path: %s
+versions: %s
+		`, name, m.Path, m.Versions)
+		opts := []string{"add a new version", "exit"}
+		i, _ := chooseFrom("what would you like to do?", opts)
+		switch i {
+		case 0:
+			addVersion(name)
+		case 1:
+
+		default:
+			fmt.Println("Error: invalid operation")
 		}
-
-		for _, v := range m.Versions {
-			if v != version {
-				continue
-			}
-
-			fmt.Printf("Version %s exists in module %s (%s)\n", version, name, m.Path)
-			return
-		}
-
-		m.Versions = append(m.Versions, version)
-		viper.Set(name, m)
-		viper.WriteConfig()
 		return
 	}
+	addModule(name)
+}
 
-	if path == "" {
-		fmt.Printf("Error: to add new module, flag \"path\" is required")
-		return
-	}
+func addModule(name string) {
+	path := getInput("path of the module to add", "module path cannot be empty", false)
+	m := &config.Module{Name: name, Path: path}
 
-	m = &config.Module{Name: name, Path: path}
-	if version != "" {
-		m.Versions = []string{version}
+	opts := []string{"Yes", "No"}
+	i, _ := chooseFrom("Do you want to add version(s) to the module now?", opts)
+	if i == 0 {
+		vs := []string{}
+		filter := map[string]struct{}{}
+		vs, filter = getVersWithFilter(vs, filter)
+		if len(vs) > 0 {
+			m.Versions = vs
+		}
 	}
 
 	viper.Set(name, m)
 	viper.WriteConfig()
+	fmt.Printf("Info of Module %s has been successfully added.\n", name)
+}
+
+func addVersion(name string) {
+	m := config.Modules[name]
+	filter := map[string]struct{}{}
+	vs := []string{}
+	if m.Versions != nil {
+		for _, v := range m.Versions {
+			if _, ok := filter[v]; ok {
+				continue
+			}
+			filter[v] = struct{}{}
+			vs = append(vs, v)
+		}
+	}
+
+	vs, filter = getVersWithFilter(vs, filter)
+	m.Versions = vs
+	viper.Set(name, m)
+	viper.WriteConfig()
+	fmt.Printf("Info of Module %s has been successfully updated.\n", name)
+}
+
+func getVersWithFilter(vs []string, filter map[string]struct{}) ([]string, map[string]struct{}) {
+	rawVers := getInput("versions of the module to add (use ',' to delimit versions)",
+		"module versions cannot be empty", false)
+	versions := strings.Split(rawVers, ",")
+	for _, v := range versions {
+		v = strings.TrimSpace(v)
+		if v == "" {
+			continue
+		}
+		if _, ok := filter[v]; ok {
+			continue
+		}
+		filter[v] = struct{}{}
+		vs = append(vs, v)
+	}
+	return vs, filter
 }

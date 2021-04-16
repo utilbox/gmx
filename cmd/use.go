@@ -22,9 +22,8 @@ THE SOFTWARE.
 package cmd
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
+	"github.com/utilbox/gmx/config"
 )
 
 // useCmd represents the use command
@@ -38,7 +37,7 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("use called")
+		useModule("")
 	},
 }
 
@@ -54,4 +53,24 @@ func init() {
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
 	// useCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+}
+
+func useModule(name string) {
+	if name == "" {
+		name = selectModule("name of module to use", "module name cannot be empty")
+	}
+	m := config.Modules[name]
+	p := m.Path
+	vs := m.Versions
+	v := "@latest"
+	if vs != nil && len(vs) > 1 {
+		_, c := chooseFrom("choose a version to use", vs)
+		v = "@" + c
+	}
+	if len(vs) == 1 {
+		v = "@" + vs[0]
+	}
+	p = p + v
+
+	runGoGet(p)
 }

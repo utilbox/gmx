@@ -30,66 +30,55 @@ import (
 	"github.com/utilbox/gmx/config"
 )
 
-// rmCmd represents the rm command
-var rmCmd = &cobra.Command{
-	Use:   "rm",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+// updateCmd represents the update command
+var updateCmd = &cobra.Command{
+	Use:   "update",
+	Short: "Command update is used to update the path of a module referred by the name",
+	Long:  `Command update is used to update the path of a module referred by the name.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		rmModule()
+		updateModule()
 	},
 }
 
 func init() {
-	rootCmd.AddCommand(rmCmd)
+	rootCmd.AddCommand(updateCmd)
 }
 
-func rmModule() {
-	selected := selectModule("name of module to remove", "module name cannot be empty")
-	opts := []string{"remove the module", "remove a version"}
-	idx, _ := chooseFrom("What to do?", opts)
-	switch idx {
+func updateModule() {
+	selected := selectModule("name of module to update", "module name cannot be empty")
+	opts := []string{"fix module path", "fix a version"}
+	i, _ := chooseFrom("what to do", opts)
+	switch i {
 	case 0:
-		removeModule(selected)
+		fixPath(selected)
 	case 1:
-		removeVersion(selected)
+		fixVersion(selected)
 	default:
-		fmt.Print("Error: invalid operation")
+		fmt.Println("Error: invalid operation")
+		return
 	}
-
 }
 
-func removeVersion(name string) {
-	m, ok := config.Modules[name]
-	if !ok {
-		fmt.Printf("Error: module %s doesn't exist\n", name)
-		os.Exit(1)
-	}
-	vs := m.Versions
-	if vs == nil || len(vs) == 0 {
-		fmt.Printf("Error: no valid version in the info of module %s\n", name)
-		os.Exit(1)
-	}
-
-	i, v := chooseFrom("choose a version to remove", vs)
-
-	if i == 0 {
-		vs = vs[1:]
-	} else if i == len(vs)-1 {
-		vs = vs[:i]
-	} else {
-		head := vs[:i]
-		tail := vs[i+1:]
-		vs = append(head, tail...)
-	}
-
-	m.Versions = vs
+func fixPath(name string) {
+	m := config.Modules[name]
+	path := getInput("new path for the module", "module path cannot be empty", false)
+	m.Path = path
 	viper.Set(name, m)
 	viper.WriteConfig()
-	fmt.Printf("Version %s of Module %s has been successfully removed.\n", v, name)
+	fmt.Printf("Path of Module %s has been successfully updated.\n", name)
+}
+
+func fixVersion(name string) {
+	m := config.Modules[name]
+	vs := m.Versions
+	if vs == nil || len(vs) == 0 {
+		fmt.Printf("Error: no valid version for Module %s.\n", name)
+		os.Exit(1)
+	}
+	i, v := chooseFrom("choose a version to fix", vs)
+	nv := getInput("new version to replace "+v, "module version cannot be empty", false)
+	vs[i] = nv
+	viper.Set(name, m)
+	viper.WriteConfig()
+	fmt.Printf("Versions of Module %s has been successfully updated.\n", name)
 }
