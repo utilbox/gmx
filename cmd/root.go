@@ -34,7 +34,7 @@ var cfgFile string
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "gmx",
-	Short: "gmx is an extention for golang module management locally.",
+	Short: "gmx is an extension for golang module management locally.",
 	Long: `gmx is an extension for golang module management which can enable you to
 maintain a local collection of go modules in common use. It provides a 
 set of interactive commands for an easy management of the local collection
