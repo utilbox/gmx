@@ -11,7 +11,7 @@ $ go get github.com/utilbox/gmx
 
 This will create the `gmx` executable under your `$GOPATH/bin` directory. You can move it to a permanent directory under `$PATH` so that you can use it without caring what the `$GOPATH` would be changed to.
 
-You can also download the gost executable directly from the release page:
+You can also download the `gmx` executable directly from the release page:
 
 [https://github.com/utilbox/gmx/releases](https://github.com/utilbox/gmx/releases)
 
